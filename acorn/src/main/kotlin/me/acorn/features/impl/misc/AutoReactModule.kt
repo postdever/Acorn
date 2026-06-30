@@ -1,7 +1,6 @@
 package me.acorn.features.impl.misc
 
 import me.acorn.Acorn
-import me.melinoe.Melinoe.mc
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.StringSetting
@@ -9,20 +8,21 @@ import me.melinoe.events.ChatPacketEvent
 import me.melinoe.events.core.on
 import me.melinoe.events.core.onReceive
 import me.melinoe.features.Module
+import me.melinoe.features.impl.misc.ChatModule
+import me.melinoe.features.impl.misc.ServerChatCategory
 import me.melinoe.utils.TabListUtils
 import me.melinoe.utils.data.Item
-import me.melinoe.utils.handlers.schedule
 import net.minecraft.network.protocol.game.ClientboundPlayerChatPacket
 
 object AutoReactModule : Module(
     name = "Auto React",
-    description = "Automatically says /ac f on player deaths and /ac gg on notable drops.",
+    description = "Automatically sends reaction messages on player deaths and notable drops.",
     category = Acorn.CATEGORY
 ) {
-    val autoF by BooleanSetting("Auto F", true, desc = "Say /ac f when a player dies.")
+    val autoF by BooleanSetting("Auto F", true, desc = "Send your configured F message when a player dies.")
     val fMessage by StringSetting("F Message", "f", desc = "Message to send on a death.").withDependency { autoF }
 
-    val autoGG by BooleanSetting("Auto GG", true, desc = "Say /ac gg on notable drops.")
+    val autoGG by BooleanSetting("Auto GG", true, desc = "Send your configured GG message on notable drops.")
     val ggMessage by StringSetting("GG Message", "gg", desc = "Message to send on a notable drop.").withDependency { autoGG }
     val ggBloodshot by BooleanSetting("Bloodshot", true, desc = "React to Bloodshot drops.").withDependency { autoGG }
     val ggUnholy by BooleanSetting("Unholy", true, desc = "React to Unholy drops.").withDependency { autoGG }
@@ -106,13 +106,10 @@ object AutoReactModule : Module(
         return rarityEnabled(matched.rarity)
     }
 
+    // Route reactions through Melinoe's chat queue: it switches to default chat, sends, rate-limits,
+    // then restores the player's original chat mode. Mirrors Melinoe's own /ac command.
     private fun sendGG() {
-        schedule(4) {
-            mc.player?.connection?.sendCommand("chat default")
-            schedule(4) {
-                mc.player?.connection?.sendChat(ggMessage)
-            }
-        }
+        ChatModule.enqueueMessage(ServerChatCategory.DEFAULT, ggMessage)
     }
 
     init {
@@ -124,12 +121,7 @@ object AutoReactModule : Module(
 
             if (autoF && DEATH_PATTERN.containsMatchIn(msg) && isOnSameServer(msg)) {
                 lastSent = now
-                schedule(4) {
-                    mc.player?.connection?.sendCommand("chat default")
-                    schedule(4) {
-                        mc.player?.connection?.sendChat(fMessage)
-                    }
-                }
+                ChatModule.enqueueMessage(ServerChatCategory.DEFAULT, fMessage)
                 return@on
             }
 

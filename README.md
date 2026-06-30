@@ -19,17 +19,6 @@ Automatically reacts in chat to notable in-game events.
 
   Cooldown: 1.5 seconds between reactions to prevent spam.
 
-### Chat Shortcuts
-Client-side commands for quickly sending messages to different chat channels.
-
-| Command | Channel |
-|---------|---------|
-| `/ac <message>` | Default chat |
-| `/gc <message>` | Guild chat |
-| `/cc <message>` | Group chat |
-
-A **Default Chat** setting lets you choose which chat mode to return to after a shortcut is used (Default, Guild, or Group).
-
 ## Requirements
 
 - Minecraft **26.1.2**
