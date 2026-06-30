@@ -84,7 +84,7 @@ object AutoReactModule : Module(
         val craftIndex = msg.indexOf(" has just crafted ")
         if (craftIndex == -1) return false
         val itemStart = craftIndex + " has just crafted ".length
-        val matched = Item.entries
+        val matched = Item.all
             .filter { msg.indexOf(it.displayName, itemStart) == itemStart }
             .maxByOrNull { it.displayName.length }
             ?: return false
@@ -99,7 +99,7 @@ object AutoReactModule : Module(
         val gotIndex = msg.lastIndexOf(" got ")
         if (gotIndex == -1) return false
         val itemStart = gotIndex + 5
-        val matched = Item.entries
+        val matched = Item.all
             .filter { msg.indexOf(it.displayName, itemStart) == itemStart }
             .maxByOrNull { it.displayName.length }
             ?: return false

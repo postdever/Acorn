@@ -3,7 +3,7 @@
 [![Modrinth](https://img.shields.io/badge/Modrinth-Download-00AF5C?logo=modrinth)](https://modrinth.com/mod/acornaddon)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord)](https://serverhub.xyz/archon)
 
-A [Fabric](https://fabricmc.net/) mod addon for **Telos Realms** (Minecraft 1.21.10) that extends [Melinoe](https://modrinth.com/mod/melinoe) with quality-of-life features.
+A [Fabric](https://fabricmc.net/) mod addon for **Telos Realms** (Minecraft 26.1.2) that extends [Melinoe](https://modrinth.com/mod/melinoe) with quality-of-life features.
 
 ## Features
 
@@ -32,13 +32,13 @@ A **Default Chat** setting lets you choose which chat mode to return to after a 
 
 ## Requirements
 
-- Minecraft **1.21.10**
-- [Fabric Loader](https://fabricmc.net/use/installer/)
+- Minecraft **26.1.2**
+- [Fabric Loader](https://fabricmc.net/use/installer/) (0.19.3+)
 - [Melinoe](https://modrinth.com/mod/melinoe) (required dependency)
 
 ## Installation
 
-1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.21.10.
+1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 26.1.2.
 2. Download and install [Melinoe](https://modrinth.com/mod/melinoe).
 3. Drop the Acorn `.jar` into your `mods` folder.
 

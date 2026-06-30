@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("fabric-loom")
+    id("net.fabricmc.fabric-loom")
     kotlin("jvm")
     `maven-publish`
 }
@@ -17,43 +17,40 @@ repositories {
 }
 
 dependencies {
+    // Minecraft 26.1+ is deobfuscated, so mappings are no longer required and mod
+    // dependencies use the standard implementation/compileOnly/runtimeOnly configs.
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}")
+    implementation("net.fabricmc:fabric-loader:${property("loader_version")}")
+    implementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}")
 
-    modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
+    runtimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
 
-    // Melinoe from local Maven - run ./gradlew publishToMavenLocal in Melinoe project first
-    modCompileOnly("me.melinoe:Melinoe:${property("melinoe_version")}") {
+    // Melinoe from local Maven - run ./gradlew publishToMavenLocal in Melinoe project first.
+    // Requires a Melinoe build compiled against Minecraft 26.1.2.
+    compileOnly("me.melinoe:Melinoe:${property("melinoe_version")}") {
         exclude(group = "dev.firstdark.discordrpc")
     }
 
-    modImplementation("com.github.stivais:Commodore:${property("commodore_version")}")
+    implementation("com.github.stivais:Commodore:${property("commodore_version")}")
 }
 
 loom {
     runConfigs.named("client") {
         isIdeConfigGenerated = true
-        vmArgs.addAll(
-            arrayOf(
-                "-Dmixin.debug.export=true",
-                "-Ddevauth.enabled=true",
-                "-Ddevauth.account=main",
-                "-XX:+AllowEnhancedClassRedefinition"
-            )
+        // Loom 1.17 exposes vmArgs as an immutable list; use the vmArgs(...) method to append.
+        // Loom now wires the Mixin javaagent into dev run configs itself, so the old manual
+        // sponge-mixin -javaagent injection is no longer needed.
+        vmArgs(
+            "-Dmixin.debug.export=true",
+            "-Ddevauth.enabled=true",
+            "-Ddevauth.account=main",
+            "-XX:+AllowEnhancedClassRedefinition"
         )
     }
 
     runConfigs.named("server") {
         isIdeConfigGenerated = false
-    }
-}
-
-afterEvaluate {
-    loom.runs.named("client") {
-        vmArg("-javaagent:${configurations.compileClasspath.get().find { it.name.contains("sponge-mixin") }}")
     }
 }
 
@@ -79,14 +76,14 @@ tasks {
 
     compileKotlin {
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
+            jvmTarget = JvmTarget.JVM_25
             freeCompilerArgs.add("-Xlambdas=class") // Commodore
         }
     }
 
     compileJava {
-        sourceCompatibility = "21"
-        targetCompatibility = "21"
+        sourceCompatibility = "25"
+        targetCompatibility = "25"
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
     }
@@ -97,6 +94,6 @@ base {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
     withSourcesJar()
 }
