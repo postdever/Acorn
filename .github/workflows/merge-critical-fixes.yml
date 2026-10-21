@@ -1,0 +1,49 @@
+# Merges a Dependabot security PR at once when the version it replaces has a
+# CRITICAL advisory in GitHub's advisory database. Anything less than critical
+# is left for a person. Uses only this repo's own Actions token: the advisory
+# database is readable with any token, and the merge needs this repo alone.
+# Put here on 2026-10-21 (same file in every postdever repo; Predever
+# Control's /cvewatch deploys the merge where the repo runs on the home server).
+name: Merge critical security fixes
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Merge when it fixes a critical advisory
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+          ECO: ${{ steps.meta.outputs.package-ecosystem }}
+          NAMES: ${{ steps.meta.outputs.dependency-names }}
+          FROM: ${{ steps.meta.outputs.previous-version }}
+        run: |
+          case "$ECO" in
+            npm_and_yarn) eco=npm ;;
+            pip|uv|poetry) eco=pip ;;
+            gradle|maven) eco=maven ;;
+            *) echo "Ecosystem $ECO is not handled; left for a person."; exit 0 ;;
+          esac
+          critical=0
+          IFS=',' read -ra names <<< "$NAMES"
+          for raw in "${names[@]}"; do
+            name="$(echo "$raw" | xargs)"
+            [ -n "$name" ] && [ -n "$FROM" ] || continue
+            n=$(gh api -X GET /advisories -f ecosystem="$eco" -f affects="$name@$FROM" -f severity=critical -f per_page=100 --jq length)
+            echo "$name@$FROM: $n critical advisories"
+            critical=$((critical + n))
+          done
+          if [ "$critical" -gt 0 ]; then
+            gh pr merge "$PR" --merge
+          else
+            echo "Not critical; left for a person."
+          fi
